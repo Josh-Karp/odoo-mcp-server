@@ -37,6 +37,7 @@ class OdooConnection:
         self.username = ODOO_USERNAME
         self.password = ODOO_PASSWORD
         self.uid = None
+        self._models = None
 
     def _validate_config(self):
         missing = [
@@ -71,19 +72,29 @@ class OdooConnection:
             self.authenticate()
         args = args if args is not None else []
         kwargs = kwargs if kwargs is not None else {}
-        models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
+        if self._models is None:
+            self._models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
         try:
-            return models.execute_kw(
+            return self._models.execute_kw(
                 self.db, self.uid, self.password, model, method, args, kwargs
             )
         except xmlrpc.client.Fault as e:
             if e.faultCode == 100:
                 self.authenticate()
-                models = xmlrpc.client.ServerProxy(f"{self.url}/xmlrpc/2/object")
-                return models.execute_kw(
+                return self._models.execute_kw(
                     self.db, self.uid, self.password, model, method, args, kwargs
                 )
             raise
+
+
+_connection = None
+
+
+def _get_connection():
+    global _connection
+    if _connection is None:
+        _connection = OdooConnection()
+    return _connection
 
 
 def _validate_model(model):
@@ -128,7 +139,7 @@ def search_records(model, domain=None, fields=None, limit=100, offset=0):
         return {"error": f"offset must be a non-negative integer, got {offset!r}"}
 
     try:
-        conn = OdooConnection()
+        conn = _get_connection()
         count = conn.execute(model, "search_count", [domain])
         records = conn.execute(
             model,
@@ -159,7 +170,7 @@ def create_record(model, values):
         return {"error": "values cannot be empty"}
 
     try:
-        conn = OdooConnection()
+        conn = _get_connection()
         record_id = conn.execute(model, "create", [values])
         return {"id": record_id}
     except xmlrpc.client.Fault as e:
@@ -189,7 +200,7 @@ def update_record(model, record_id, values):
         return {"error": "values cannot be empty"}
 
     try:
-        conn = OdooConnection()
+        conn = _get_connection()
         result = conn.execute(model, "write", [[record_id], values])
         if not result:
             return {

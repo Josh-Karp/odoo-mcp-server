@@ -28,8 +28,16 @@ class TestSearchRecords:
         result = search_records("res.partner", limit=-1)
         assert "error" in result
 
+    def test_limit_boolean(self):
+        result = search_records("res.partner", limit=True)
+        assert "error" in result
+
     def test_negative_offset(self):
         result = search_records("res.partner", offset=-1)
+        assert "error" in result
+
+    def test_offset_boolean(self):
+        result = search_records("res.partner", offset=True)
         assert "error" in result
 
     def test_disallowed_model(self):

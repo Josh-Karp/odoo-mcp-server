@@ -16,8 +16,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
-      - name: Run tests
-        run: pytest tests/ -v --tb=short
+        run: pip install -r requirements.txt
+      - name: Run tests with coverage
+        run: pytest tests/ -v --tb=short --cov=src --cov-report=term-missing --cov-report=xml
+      - name: Add coverage summary
+        run: python -m coverage report --format=markdown >> $GITHUB_STEP_SUMMARY

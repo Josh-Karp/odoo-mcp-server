@@ -70,12 +70,45 @@ class TestOdooConnectionAuthenticate:
 
 
 class TestOdooConnectionValidateConfig:
-    def test_validate_config_raises_on_missing_vars(self):
+    def test_validate_config_raises_when_url_missing(self):
         with (
             patch("src.mcp_server.ODOO_URL", ""),
             patch("src.mcp_server.ODOO_DB", "testdb"),
             patch("src.mcp_server.ODOO_USERNAME", "user"),
             patch("src.mcp_server.ODOO_PASSWORD", "pass"),
+        ):
+            conn = OdooConnection()
+            with pytest.raises(ValueError):
+                conn._validate_config()
+
+    def test_validate_config_raises_when_db_missing(self):
+        with (
+            patch("src.mcp_server.ODOO_URL", "http://test"),
+            patch("src.mcp_server.ODOO_DB", ""),
+            patch("src.mcp_server.ODOO_USERNAME", "user"),
+            patch("src.mcp_server.ODOO_PASSWORD", "pass"),
+        ):
+            conn = OdooConnection()
+            with pytest.raises(ValueError):
+                conn._validate_config()
+
+    def test_validate_config_raises_when_username_missing(self):
+        with (
+            patch("src.mcp_server.ODOO_URL", "http://test"),
+            patch("src.mcp_server.ODOO_DB", "testdb"),
+            patch("src.mcp_server.ODOO_USERNAME", ""),
+            patch("src.mcp_server.ODOO_PASSWORD", "pass"),
+        ):
+            conn = OdooConnection()
+            with pytest.raises(ValueError):
+                conn._validate_config()
+
+    def test_validate_config_raises_when_password_missing(self):
+        with (
+            patch("src.mcp_server.ODOO_URL", "http://test"),
+            patch("src.mcp_server.ODOO_DB", "testdb"),
+            patch("src.mcp_server.ODOO_USERNAME", "user"),
+            patch("src.mcp_server.ODOO_PASSWORD", ""),
         ):
             conn = OdooConnection()
             with pytest.raises(ValueError):
