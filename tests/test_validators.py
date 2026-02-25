@@ -1,5 +1,4 @@
-import pytest
-from src.mcp_server import _validate_model, _validate_domain, ALLOWED_MODELS
+from src.mcp_server import ALLOWED_MODELS, _validate_domain, _validate_model
 
 
 class TestValidateModel:

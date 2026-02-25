@@ -1,7 +1,7 @@
 import xmlrpc.client
 from unittest.mock import patch
 
-from src.mcp_server import create_record, OdooConnection
+from src.mcp_server import OdooConnection, create_record
 
 
 class TestCreateRecord:

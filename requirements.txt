@@ -1,2 +1,4 @@
+mcp
 pytest
 pytest-cov
+ruff

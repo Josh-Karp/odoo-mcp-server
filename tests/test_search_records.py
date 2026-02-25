@@ -1,7 +1,7 @@
 import xmlrpc.client
 from unittest.mock import patch
 
-from src.mcp_server import search_records, OdooConnection
+from src.mcp_server import OdooConnection, search_records
 
 
 class TestSearchRecords:
