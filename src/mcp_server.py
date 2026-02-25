@@ -1,4 +1,5 @@
 import os
+import threading
 import xmlrpc.client
 from typing import Any
 
@@ -46,6 +47,8 @@ class OdooConnection:
 
     def __init__(self) -> None:
         self._uid: int | None = None
+        self._models_proxy: xmlrpc.client.ServerProxy | None = None
+        self._lock = threading.Lock()
 
     def _validate_config(self) -> None:
         missing = [
@@ -71,7 +74,7 @@ class OdooConnection:
             uid = common.authenticate(ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD, {})
         except Exception as exc:
             raise ConnectionError(
-                f"Failed to connect to Odoo at {ODOO_URL}: {exc}"
+                f"Failed to connect to Odoo at {ODOO_URL}."
             ) from exc
 
         if not uid:
@@ -91,16 +94,24 @@ class OdooConnection:
     def execute(self, model: str, method: str, *args: Any) -> Any:
         """Execute an Odoo XML-RPC call, re-authenticating on session expiry."""
         self._validate_config()
-        models_proxy = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/object")
+        with self._lock:
+            if self._models_proxy is None:
+                self._models_proxy = xmlrpc.client.ServerProxy(
+                    f"{ODOO_URL}/xmlrpc/2/object"
+                )
+            proxy = self._models_proxy
         try:
-            return models_proxy.execute_kw(
+            return proxy.execute_kw(
                 ODOO_DB, self.uid, ODOO_PASSWORD, model, method, *args
             )
         except xmlrpc.client.Fault as fault:
-            # Session expired — re-authenticate once and retry
+            # Attempt re-authentication on session-expiry faults (Odoo v14 raises
+            # faultCode=100 or includes "session" in the fault string when the
+            # cached uid is no longer valid).
             if "session" in fault.faultString.lower() or fault.faultCode == 100:
-                self._uid = None
-                return models_proxy.execute_kw(
+                with self._lock:
+                    self._uid = None
+                return proxy.execute_kw(
                     ODOO_DB, self.uid, ODOO_PASSWORD, model, method, *args
                 )
             raise
@@ -135,10 +146,12 @@ def _validate_domain(domain: list) -> str | None:
     """Return an error string if the domain is considered unsafe."""
     if not isinstance(domain, list):
         return "Parameter 'domain' must be a list."
-    # Reject top-level OR with more than 5 conditions
+    # Reject top-level OR with more than 5 conditions.
+    # In Odoo prefix notation N '|' operators connect N+1 conditions;
+    # reject when that total exceeds 5 (i.e., more than 4 '|' operators).
     if domain and domain[0] == "|":
-        conditions = [item for item in domain if item != "|"]
-        if len(conditions) > 5:
+        or_ops = sum(1 for item in domain if item == "|")
+        if or_ops + 1 > 5:
             return (
                 "Domain rejected: top-level OR ('|') with more than 5 conditions "
                 "is not allowed to prevent overly broad queries."
@@ -177,6 +190,8 @@ def search_records(
         return {"error": err}
     if err := _validate_domain(domain):
         return {"error": err}
+    if not isinstance(fields, list):
+        return {"error": "Parameter 'fields' must be a list."}
     if not isinstance(limit, int) or limit < 1:
         return {"error": "Parameter 'limit' must be a positive integer."}
     if limit > MAX_LIMIT:
@@ -192,6 +207,8 @@ def search_records(
             {"fields": fields, "limit": limit, "offset": offset},
         )
         return {"records": records, "count": len(records)}
+    except ValueError as exc:
+        return {"error": f"Configuration error: {exc}"}
     except PermissionError as exc:
         return {"error": f"Permission denied: {exc}"}
     except ConnectionError as exc:
@@ -223,6 +240,8 @@ def create_record(model: str, values: dict) -> dict:
     try:
         new_id = _odoo.execute(model, "create", [values])
         return {"id": new_id}
+    except ValueError as exc:
+        return {"error": f"Configuration error: {exc}"}
     except PermissionError as exc:
         return {"error": f"Permission denied: {exc}"}
     except ConnectionError as exc:
@@ -258,9 +277,11 @@ def update_record(model: str, record_id: int, values: dict) -> dict:
         result = _odoo.execute(model, "write", [[record_id], values])
         if not result:
             return {
-                "error": f"Record with id={record_id} not found or could not be updated."
+                "error": f"Failed to update record with id={record_id}."
             }
         return {"success": True, "id": record_id}
+    except ValueError as exc:
+        return {"error": f"Configuration error: {exc}"}
     except PermissionError as exc:
         return {"error": f"Permission denied: {exc}"}
     except ConnectionError as exc:

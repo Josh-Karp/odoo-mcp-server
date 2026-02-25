@@ -15,14 +15,8 @@ COPY src/ ./src/
 # Switch to non-root user
 USER appuser
 
-# Environment variables (no secrets baked in — supply at runtime)
-ENV ODOO_URL="" \
-    ODOO_DB="" \
-    ODOO_USERNAME="" \
-    ODOO_PASSWORD="" \
-    READ_ONLY_MODE="false"
-
-# MCP servers typically communicate over stdio; expose 8000 for HTTP transports
-EXPOSE 8000
+# Only READ_ONLY_MODE has a safe default; all Odoo connection variables
+# must be supplied at runtime (ODOO_URL, ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD).
+ENV READ_ONLY_MODE="false"
 
 CMD ["python", "src/mcp_server.py"]

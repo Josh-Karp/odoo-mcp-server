@@ -36,12 +36,14 @@ Copy `.env.example` to `.env` and fill in your values.
 
 ## Running with Docker
 
+The server communicates over **stdio** (standard input/output), which is the default transport for MCP clients such as Claude Desktop. No port binding is required.
+
 ```bash
 # Build the image
 docker build -t odoo-mcp-server .
 
-# Run the container (stdio transport — used by MCP clients directly)
-docker run --rm \
+# Run the container — MCP clients connect via stdio
+docker run --rm -i \
   -e ODOO_URL=https://your-odoo.example.com \
   -e ODOO_DB=your_database \
   -e ODOO_USERNAME=your@email.com \
@@ -52,7 +54,7 @@ docker run --rm \
 Or using an env file:
 
 ```bash
-docker run --rm --env-file .env odoo-mcp-server
+docker run --rm -i --env-file .env odoo-mcp-server
 ```
 
 ---
