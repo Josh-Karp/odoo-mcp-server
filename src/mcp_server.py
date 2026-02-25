@@ -233,6 +233,17 @@ def create_record(model: str, values: dict) -> dict:
 
 
 @mcp.tool()
+def get_allowed_models() -> dict:
+    """Return the list of Odoo models permitted by this MCP server.
+
+    Returns:
+        A dict with a 'models' key containing the list of allowed model names,
+        and a 'count' key with the total number of allowed models.
+    """
+    return {"models": ALLOWED_MODELS, "count": len(ALLOWED_MODELS)}
+
+
+@mcp.tool()
 def update_record(model: str, record_id: int, values: dict) -> dict:
     """Update an existing record in Odoo by ID.
 

@@ -6,7 +6,7 @@ A lightweight **MCP (Model Context Protocol) server** that connects AI assistant
 
 ## Overview
 
-This server exposes three MCP tools — `search_records`, `create_record`, and `update_record` — allowing MCP-compatible clients (such as Claude Desktop) to query and modify data in a live Odoo instance. It includes a model allow-list, optional read-only mode, and input validation to keep interactions safe and auditable.
+This server exposes four MCP tools — `search_records`, `create_record`, `update_record`, and `get_allowed_models` — allowing MCP-compatible clients (such as Claude Desktop) to query and modify data in a live Odoo instance. It includes a model allow-list, optional read-only mode, and input validation to keep interactions safe and auditable.
 
 ---
 
@@ -107,6 +107,22 @@ Update an existing record in Odoo by ID.
 | `model`     | str   | Odoo model name (must be in the allow-list)      |
 | `record_id` | int   | ID of the record to update                       |
 | `values`    | dict  | Field values to update                           |
+
+### `get_allowed_models`
+
+Returns the list of Odoo models permitted by this MCP server. Takes no parameters.
+
+| Parameter | Type | Description |
+|---|---|---|
+| *(none)* | — | This tool takes no parameters |
+
+**Example response:**
+```json
+{
+  "models": ["res.partner", "res.users", "sale.order", "..."],
+  "count": 17
+}
+```
 
 ---
 
