@@ -85,7 +85,8 @@ class OdooConnection:
     def uid(self) -> int:
         if self._uid is None:
             self.authenticate()
-        return self._uid  # type: ignore[return-value]
+        assert self._uid is not None, "Authentication failed: uid is None after authenticate()"
+        return self._uid
 
     def execute(self, model: str, method: str, *args: Any) -> Any:
         """Execute an Odoo XML-RPC call, re-authenticating on session expiry."""
