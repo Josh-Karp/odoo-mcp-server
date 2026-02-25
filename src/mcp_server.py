@@ -233,6 +233,44 @@ def create_record(model: str, values: dict) -> dict:
 
 
 @mcp.tool()
+def get_record(
+    model: str,
+    record_id: int,
+    fields: list | None = None,
+) -> dict:
+    """Fetch a single Odoo record by its ID.
+
+    Args:
+        model: The Odoo model to read from (must be in the allow-list).
+        record_id: The ID of the record to fetch.
+        fields: List of fields to return. Defaults to [] (all fields).
+    """
+    if fields is None:
+        fields = []
+
+    if err := _validate_model(model):
+        return {"error": err}
+    if not isinstance(record_id, int) or record_id <= 0:
+        return {"error": "Parameter 'record_id' must be a positive integer."}
+
+    try:
+        result = _odoo.execute(model, "read", [[record_id]], {"fields": fields})
+        if not result:
+            return {
+                "error": f"Record with id={record_id} not found in model '{model}'."
+            }
+        return {"record": result[0]}
+    except PermissionError as exc:
+        return {"error": f"Permission denied: {exc}"}
+    except ConnectionError as exc:
+        return {"error": f"Connection error: {exc}"}
+    except xmlrpc.client.Fault as fault:
+        return {"error": f"Odoo error: {fault.faultString}"}
+    except Exception as exc:
+        return {"error": f"Unexpected error: {exc}"}
+
+
+@mcp.tool()
 def update_record(model: str, record_id: int, values: dict) -> dict:
     """Update an existing record in Odoo by ID.
 
