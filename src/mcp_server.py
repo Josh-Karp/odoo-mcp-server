@@ -72,10 +72,12 @@ class OdooConnection:
         try:
             common = xmlrpc.client.ServerProxy(f"{ODOO_URL}/xmlrpc/2/common")
             uid = common.authenticate(ODOO_DB, ODOO_USERNAME, ODOO_PASSWORD, {})
-        except Exception as exc:
+        except Exception:
+            # Suppress the exception chain to prevent credential details
+            # (e.g. ODOO_PASSWORD) from appearing in tracebacks or logs.
             raise ConnectionError(
                 f"Failed to connect to Odoo at {ODOO_URL}."
-            ) from exc
+            ) from None
 
         if not uid:
             raise PermissionError(
