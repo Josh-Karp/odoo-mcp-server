@@ -1,6 +1,7 @@
 import xmlrpc.client
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from src.mcp_server import OdooConnection
 
@@ -126,7 +127,13 @@ class TestOdooConnectionExecute:
                 )
 
         mock_models.execute_kw.assert_called_once_with(
-            "testdb", 1, "pass", "res.partner", "search_read", [[]], {"fields": ["name"]}
+            "testdb",
+            1,
+            "pass",
+            "res.partner",
+            "search_read",
+            [[]],
+            {"fields": ["name"]},
         )
         assert result == [{"id": 1}]
 
@@ -145,9 +152,10 @@ class TestOdooConnectionExecute:
                 conn._uid = 1
 
             with patch.multiple("src.mcp_server", **_VALID_CONFIG):
-                with patch.object(conn, "authenticate", side_effect=_restore_uid) as mock_auth:
+                with patch.object(
+                    conn, "authenticate", side_effect=_restore_uid
+                ) as mock_auth:
                     result = conn.execute("res.partner", "search_read", [[]], {})
 
         mock_auth.assert_called_once()
         assert result == [{"id": 1}]
-

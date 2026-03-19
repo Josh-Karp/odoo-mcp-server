@@ -1,7 +1,7 @@
 import xmlrpc.client
 from unittest.mock import patch
 
-from src.mcp_server import search_records, OdooConnection
+from src.mcp_server import OdooConnection, search_records
 
 
 class TestSearchRecords:
@@ -43,7 +43,11 @@ class TestSearchRecords:
     def test_unsafe_domain_or_too_many_conditions(self):
         # 5 "|" operators → 6 conditions; exceeds the 5-condition limit.
         domain = [
-            "|", "|", "|", "|", "|",
+            "|",
+            "|",
+            "|",
+            "|",
+            "|",
             ("f", "=", 1),
             ("f", "=", 2),
             ("f", "=", 3),
@@ -73,4 +77,3 @@ class TestSearchRecords:
         ):
             result = search_records("res.partner")
         assert "error" in result
-

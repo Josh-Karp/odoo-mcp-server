@@ -75,9 +75,7 @@ class OdooConnection:
         except Exception:
             # Suppress the exception chain to prevent credential details
             # (e.g. ODOO_PASSWORD) from appearing in tracebacks or logs.
-            raise ConnectionError(
-                f"Failed to connect to Odoo at {ODOO_URL}."
-            ) from None
+            raise ConnectionError(f"Failed to connect to Odoo at {ODOO_URL}.") from None
 
         if not uid:
             raise PermissionError(
@@ -90,7 +88,9 @@ class OdooConnection:
     def uid(self) -> int:
         if self._uid is None:
             self.authenticate()
-        assert self._uid is not None, "Authentication failed: uid is None after authenticate()"
+        assert self._uid is not None, (
+            "Authentication failed: uid is None after authenticate()"
+        )
         return self._uid
 
     def execute(self, model: str, method: str, *args: Any) -> Any:
@@ -278,9 +278,7 @@ def update_record(model: str, record_id: int, values: dict) -> dict:
     try:
         result = _odoo.execute(model, "write", [[record_id], values])
         if not result:
-            return {
-                "error": f"Failed to update record with id={record_id}."
-            }
+            return {"error": f"Failed to update record with id={record_id}."}
         return {"success": True, "id": record_id}
     except ValueError as exc:
         return {"error": f"Configuration error: {exc}"}
