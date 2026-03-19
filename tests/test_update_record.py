@@ -1,7 +1,7 @@
 import xmlrpc.client
 from unittest.mock import patch
 
-from src.mcp_server import update_record, OdooConnection
+from src.mcp_server import OdooConnection, update_record
 
 
 class TestUpdateRecord:
@@ -33,6 +33,10 @@ class TestUpdateRecord:
 
     def test_empty_values(self):
         result = update_record("res.partner", 1, {})
+        assert "error" in result
+
+    def test_non_dict_values(self):
+        result = update_record("res.partner", 1, "not a dict")
         assert "error" in result
 
     def test_read_only_mode(self):

@@ -1,18 +1,18 @@
 import xmlrpc.client
 from unittest.mock import patch
 
-from src.mcp_server import search_records, OdooConnection
+from src.mcp_server import OdooConnection, search_records
 
 
 class TestSearchRecords:
     def test_successful_search(self):
         records = [{"id": 1, "name": "Test"}]
-        with patch.object(OdooConnection, "execute", side_effect=[1, records]):
+        with patch.object(OdooConnection, "execute", return_value=records):
             result = search_records("res.partner")
         assert result == {"records": records, "count": 1}
 
     def test_empty_domain_defaults(self):
-        with patch.object(OdooConnection, "execute", side_effect=[0, []]):
+        with patch.object(OdooConnection, "execute", return_value=[]):
             result = search_records("res.partner", domain=None)
         assert result == {"records": [], "count": 0}
 
@@ -41,7 +41,12 @@ class TestSearchRecords:
         assert "error" in result
 
     def test_unsafe_domain_or_too_many_conditions(self):
+        # 5 "|" operators → 6 conditions; exceeds the 5-condition limit.
         domain = [
+            "|",
+            "|",
+            "|",
+            "|",
             "|",
             ("f", "=", 1),
             ("f", "=", 2),

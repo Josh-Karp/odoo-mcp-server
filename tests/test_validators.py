@@ -1,5 +1,4 @@
-import pytest
-from src.mcp_server import _validate_model, _validate_domain, ALLOWED_MODELS
+from src.mcp_server import ALLOWED_MODELS, _validate_domain, _validate_model
 
 
 class TestValidateModel:
@@ -35,12 +34,17 @@ class TestValidateDomain:
         assert result is None
 
     def test_valid_or_with_few_conditions(self):
+        # Single "|" joins 2 conditions — well within the 5-condition limit.
         domain = ["|", ("name", "=", "a"), ("name", "=", "b")]
         result = _validate_domain(domain)
         assert result is None
 
     def test_valid_or_with_five_conditions(self):
+        # 4 "|" operators join 5 conditions (prefix notation). Exactly at limit.
         domain = [
+            "|",
+            "|",
+            "|",
             "|",
             ("f", "=", 1),
             ("f", "=", 2),
@@ -52,7 +56,12 @@ class TestValidateDomain:
         assert result is None
 
     def test_invalid_or_with_too_many_conditions(self):
+        # 5 "|" operators join 6 conditions — exceeds the 5-condition limit.
         domain = [
+            "|",
+            "|",
+            "|",
+            "|",
             "|",
             ("f", "=", 1),
             ("f", "=", 2),
