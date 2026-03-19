@@ -6,7 +6,7 @@ A lightweight **MCP (Model Context Protocol) server** that connects AI assistant
 
 ## Overview
 
-This server exposes three MCP tools — `search_records`, `create_record`, and `update_record` — allowing MCP-compatible clients (such as Claude Desktop) to query and modify data in a live Odoo instance. It includes a model allow-list, optional read-only mode, and input validation to keep interactions safe and auditable.
+This server exposes four MCP tools — `search_records`, `get_record`, `create_record`, and `update_record` — allowing MCP-compatible clients (such as Claude Desktop) to query and modify data in a live Odoo instance. It includes a model allow-list, optional read-only mode, and input validation to keep interactions safe and auditable.
 
 ---
 
@@ -90,6 +90,16 @@ Search for records in Odoo using domain filters.
 | `fields`  | list  | `[]`    | Fields to return (`[]` returns all fields)       |
 | `limit`   | int   | `100`   | Max records to return (max 500)                  |
 | `offset`  | int   | `0`     | Pagination offset                                |
+
+### `get_record`
+
+Fetch a single Odoo record by its ID.
+
+| Parameter   | Type  | Description                                      |
+|-------------|-------|--------------------------------------------------|
+| `model`     | str   | Odoo model name (must be in the allow-list)      |
+| `record_id` | int   | ID of the record to fetch                        |
+| `fields`    | list  | Fields to return (`[]` returns all fields). Defaults to `[]` |
 
 ### `create_record`
 
