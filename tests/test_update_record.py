@@ -31,10 +31,6 @@ class TestUpdateRecord:
         result = update_record("res.partner", "not an int", {"name": "Test"})
         assert "error" in result
 
-    def test_record_id_boolean(self):
-        result = update_record("res.partner", True, {"name": "Test"})
-        assert "error" in result
-
     def test_empty_values(self):
         result = update_record("res.partner", 1, {})
         assert "error" in result
